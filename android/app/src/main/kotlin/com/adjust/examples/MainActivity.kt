@@ -33,6 +33,8 @@ class MainActivity : FlutterActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val data = intent.data
+        // TODO: How to navigate within a Flutter app with Navive code?
+
         AdjustSdk.appWillOpenUrl(data, this)
     }
 
