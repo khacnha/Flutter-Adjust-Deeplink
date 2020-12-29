@@ -116,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // Platform messages are asynchronous, so we initialize in an async method.
   initPlatformState() async {
     AdjustConfig config =
-        new AdjustConfig('8856pj8o9tds', AdjustEnvironment.sandbox);
+        new AdjustConfig('api_key', AdjustEnvironment.sandbox);
     config.logLevel = AdjustLogLevel.verbose;
     // config.isDeviceKnown = false;
     // config.defaultTracker = 'abc123';
