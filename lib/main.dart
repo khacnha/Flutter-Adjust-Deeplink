@@ -11,6 +11,10 @@ import 'package:adjust_sdk/adjust_event_failure.dart';
 import 'package:adjust_sdk/adjust_event_success.dart';
 import 'package:adjust_sdk/adjust_session_failure.dart';
 import 'package:adjust_sdk/adjust_session_success.dart';
+import 'dart:io';
+
+import 'package:uni_links/uni_links.dart';
+import 'package:flutter/services.dart' show PlatformException;
 
 void main() {
   runApp(MyApp());
@@ -66,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
   initState() {
     super.initState();
     initPlatformState();
+    initPlatformStateForUriUniLinks();
   }
 
   @override
@@ -73,10 +78,45 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  StreamSubscription _sub;
+
+  Future<void> initPlatformStateForUriUniLinks() async {
+    // Attach a listener to the Uri links stream
+    _sub = getUriLinksStream().listen((Uri uri) {
+      print('uri $uri');
+      if (uri.toString().contains('feedback')) {
+        gotoDetailScreen();
+      }
+    }, onError: (Object err) {
+      print('uri $err');
+    });
+
+    // Attach a second listener to the stream
+    getUriLinksStream().listen((Uri uri) {
+      print('got uri: ${uri?.path} ${uri?.queryParametersAll}');
+    }, onError: (Object err) {
+      print('got err: $err');
+    });
+
+    // Get the latest Uri
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      var _initialLink = await getInitialLink();
+      if (_initialLink?.toString()?.contains('feedback')) {
+        gotoDetailScreen();
+      }
+    } on PlatformException {} on FormatException {}
+  }
+
+  void gotoDetailScreen() {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (BuildContext context) => DetailPage()));
+  }
 
   // Platform messages are asynchronous, so we initialize in an async method.
   initPlatformState() async {
-    AdjustConfig config = new AdjustConfig('8856pj8o9tds', AdjustEnvironment.sandbox);
+    AdjustConfig config =
+        new AdjustConfig('8856pj8o9tds', AdjustEnvironment.sandbox);
     config.logLevel = AdjustLogLevel.verbose;
     // config.isDeviceKnown = false;
     // config.defaultTracker = 'abc123';
@@ -92,7 +132,8 @@ class _MyHomePageState extends State<MyHomePage> {
       print('[Adjust]: Attribution changed!');
 
       if (attributionChangedData.trackerToken != null) {
-        print('[Adjust]: Tracker token: ' + attributionChangedData.trackerToken);
+        print(
+            '[Adjust]: Tracker token: ' + attributionChangedData.trackerToken);
       }
       if (attributionChangedData.trackerName != null) {
         print('[Adjust]: Tracker name: ' + attributionChangedData.trackerName);
@@ -147,7 +188,8 @@ class _MyHomePageState extends State<MyHomePage> {
         print('[Adjust]: Adid: ' + sessionFailureData.adid);
       }
       if (sessionFailureData.willRetry != null) {
-        print('[Adjust]: Will retry: ' + sessionFailureData.willRetry.toString());
+        print(
+            '[Adjust]: Will retry: ' + sessionFailureData.willRetry.toString());
       }
       if (sessionFailureData.jsonResponse != null) {
         print('[Adjust]: JSON response: ' + sessionFailureData.jsonResponse);
@@ -213,13 +255,20 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: new Text("Home screen"),),
+      appBar: AppBar(
+        title: new Text("Home screen"),
+      ),
       body: new Container(
         alignment: Alignment.center,
         child: Column(
           children: [
             new Text("Home Page"),
-            ElevatedButton(onPressed: ()=>Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => DetailPage())), child: new Text('Go to Detail'))
+            ElevatedButton(
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (BuildContext context) => DetailPage())),
+                child: new Text('Go to Detail'))
           ],
         ),
       ),
